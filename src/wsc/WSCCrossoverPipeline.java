@@ -1,12 +1,18 @@
 package wsc;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 import ec.BreedingPipeline;
 import ec.EvolutionState;
 import ec.Individual;
-import ec.gp.GPNode;
 import ec.util.Parameter;
 
 public class WSCCrossoverPipeline extends BreedingPipeline {
@@ -62,27 +68,35 @@ public class WSCCrossoverPipeline extends BreedingPipeline {
     		WSCIndividual t1 = ((WSCIndividual)inds1[x]);
     		WSCIndividual t2 = ((WSCIndividual)inds2[x]);
 
-    		// Find all nodes from both candidates
-    		List<GPNode> allT1Nodes = t1.getAllTreeNodes();
-            List<GPNode> allT2Nodes = t2.getAllTreeNodes();
+    		// Get all fragment roots from both candidates
+    		List<String> allT1Keys = new ArrayList<String>(t1.getPredecessorMap().keySet());
+            List<String> allT2Keys = new ArrayList<String>(t2.getPredecessorMap().keySet());
 
-            // Shuffle them so that the crossover is random
-            Collections.shuffle( allT1Nodes, init.random );
-            Collections.shuffle( allT2Nodes, init.random );
+            // Shuffle them so that the crossover is done randomly
+            Collections.shuffle( allT1Keys, init.random );
+            Collections.shuffle( allT2Keys, init.random );
+            
+            // Select the fragment root for crossover
+            String selected = null;
 
-            // For each t1 node, see if it can be replaced by a t2 node
-            GPNode[] nodes = null; //findReplacement(init, allT1Nodes, allT2Nodes);
-            GPNode nodeT1 = nodes[0];
-            GPNode replacementT2 = nodes[1];
-
-            // For each t2 node, see if it can be replaced by a t1 node
-            //nodes = findReplacement(init, allT2Nodes, allT1Nodes);
-            GPNode nodeT2 = nodes[0];
-            GPNode replacementT1 = nodes[1];
-
-            // Perform replacement in both individuals
-            t1.replaceNode( nodeT1, replacementT2 );
-            t2.replaceNode( nodeT2, replacementT1 );
+            for (String s1 : allT1Keys) {
+                if (!s1.equals("start")) {
+                    for (String s2 : allT2Keys) {
+                        if (s1.equals( s2 )) {
+                            selected = s1;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Create replacement fragments
+            Map<String, Set<String>> t1Replacements = findRelevantReplacements(selected, t2);
+            Map<String, Set<String>> t2Replacements = findRelevantReplacements(selected, t1);
+            
+            // Add replacement fragments to original candidates
+            addReplacementFragments(t1, t1Replacements, selected);
+            addReplacementFragments(t2, t2Replacements, selected);
 
 	        inds[q] = t1;
 	        inds[q].evaluated=false;
@@ -93,5 +107,49 @@ public class WSCCrossoverPipeline extends BreedingPipeline {
 	        }
         }
         return n1;
+	}
+	
+	private Map<String, Set<String>> findRelevantReplacements(String selected, WSCIndividual t) {
+	    Map<String, Set<String>> originalMap = t.getPredecessorMap();
+	    Map<String, Set<String>> replacementMap = new HashMap<String, Set<String>>();
+	    
+	    Queue<String> queue = new LinkedList<String>();
+	    queue.offer( selected );
+	    while(!queue.isEmpty()) {
+	        String current = queue.poll();
+	        if (!replacementMap.containsKey( current )) {
+	            Set<String> newValues = new HashSet<String>(originalMap.get(current));
+	            replacementMap.put( current, newValues );
+	            for (String n : newValues) {
+	                queue.offer( n );
+	            }
+	        }
+	    }
+	    return replacementMap;
+	}
+	
+	private void addReplacementFragments(WSCIndividual t, Map<String, Set<String>> replacements, String selected) {
+	    Map<String, Set<String>> originalMap = t.getPredecessorMap();
+	    
+	    // Add the main fragment
+	    Set<String> newValues = replacements.get( selected );
+	    originalMap.put( selected, newValues );
+	    
+	    // Recurse down and add any additional fragments that are needed
+	    Queue<String> queue = new LinkedList<String>();
+	    for(String s : newValues) {
+	        queue.offer(s);
+	    }
+	    
+	    while(!queue.isEmpty()) {
+	        String current = queue.poll();
+	        if (!originalMap.containsKey( current )) {
+                Set<String> v = new HashSet<String>(replacements.get(current));
+                originalMap.put( current, v );
+                for (String n : v) {
+                    queue.offer( n );
+                }
+            }
+	    }
 	}
 }

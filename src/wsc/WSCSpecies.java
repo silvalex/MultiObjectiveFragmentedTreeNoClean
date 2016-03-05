@@ -47,10 +47,7 @@ public class WSCSpecies extends Species {
 
 		    	for (Service p : predecessors) {
 		    		predecessorNames.add(p.name);
-
-		    		if (!predecessorMap.containsKey(p.name)) {
-		    			queue.offer(p);
-		    		}
+	    			queue.offer(p);
 		    	}
 		    	predecessorMap.put(current.name, predecessorNames);
 	    	}

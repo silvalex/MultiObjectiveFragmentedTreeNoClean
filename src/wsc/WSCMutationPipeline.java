@@ -1,17 +1,15 @@
 package wsc;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 
 import ec.BreedingPipeline;
 import ec.EvolutionState;
 import ec.Individual;
-import ec.gp.GPNode;
 import ec.util.Parameter;
+
 public class WSCMutationPipeline extends BreedingPipeline {
 
 	private static final long serialVersionUID = 1L;

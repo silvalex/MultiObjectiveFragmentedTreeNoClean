@@ -1,9 +1,16 @@
 package wsc;
 
-import ec.util.*;
-import ec.*;
-import ec.gp.*;
-import ec.simple.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import ec.EvolutionState;
+import ec.Individual;
+import ec.gp.GPProblem;
+import ec.simple.SimpleFitness;
+import ec.simple.SimpleProblemForm;
+import ec.util.Parameter;
 
 public class WSC extends GPProblem implements SimpleProblemForm {
 
@@ -16,29 +23,66 @@ public class WSC extends GPProblem implements SimpleProblemForm {
 
 	public void evaluate(final EvolutionState state, final Individual ind, final int subpopulation, final int threadnum) {
 		if (!ind.evaluated) {
-//			WSCInitializer init = (WSCInitializer) state.initializer;
-//			WSCData input = (WSCData) (this.input);
-//
-//			GPIndividual gpInd = (GPIndividual) ind;
-//			gpInd.trees[0].child.eval(state, threadnum, input, stack, ((GPIndividual) ind), this);
-//			double[] qos = new double[4];
-//			qos[WSCInitializer.TIME] = input.maxTime;
-//			qos[WSCInitializer.AVAILABILITY] = 1.0;
-//			qos[WSCInitializer.RELIABILITY] = 1.0;
-//
-//			for (Service s : input.seenServices) {
-//				qos[WSCInitializer.COST] += s.qos[WSCInitializer.COST];
-//				qos[WSCInitializer.AVAILABILITY] *= s.qos[WSCInitializer.AVAILABILITY];
-//				qos[WSCInitializer.RELIABILITY] *= s.qos[WSCInitializer.RELIABILITY];
-//			}
-//
-//			double fitness = calculateFitness(qos[WSCInitializer.AVAILABILITY], qos[WSCInitializer.RELIABILITY], qos[WSCInitializer.TIME], qos[WSCInitializer.COST], init);
-//
-//			// the fitness better be SimpleFitness!
-//			SimpleFitness f = ((SimpleFitness) ind.fitness);
-//			f.setFitness(state, fitness, false);
-//			ind.evaluated = true;
+			WSCInitializer init = (WSCInitializer) state.initializer;
+			WSCIndividual tree = (WSCIndividual) ind;
+			
+			double cost = 0.0;
+			double availability = 1.0;
+			double reliability = 1.0;
+			
+			Map<String, Double> timeMap = new HashMap<String, Double>();
+	        double time = findLongestTime("end", tree, init, timeMap);
+			
+			for (String key : timeMap.keySet()) {
+			    double[] qos = init.serviceMap.get( key ).getQos();
+			    cost += qos[WSCInitializer.COST];
+			    availability *= qos[WSCInitializer.AVAILABILITY];
+			    reliability *= qos[WSCInitializer.RELIABILITY];
+			}
+			
+			double fitness = calculateFitness(availability, reliability, time, cost, init);
+
+			// the fitness better be SimpleFitness!
+			SimpleFitness f = ((SimpleFitness) ind.fitness);
+			f.setFitness(state, fitness, false);
+			ind.evaluated = true;
+			
+			// Find the unused fragments from the tree
+			Set<String> fragmentsToRemove = new HashSet<String>();
+			for (String s : tree.getPredecessorMap().keySet()) {
+			    if (!timeMap.containsKey(s))
+			        fragmentsToRemove.add(s);
+			}
+			// Clean up the unused fragments
+			for (String s : fragmentsToRemove)
+			    tree.getPredecessorMap().remove( s );
 		}
+	}
+	
+	private double findLongestTime(String select, WSCIndividual ind, WSCInitializer init, Map<String, Double> timeMap) {
+	    if (!timeMap.containsKey( select )) {
+	        double highestTime = 0.0;
+	        
+	        for(String child: ind.getPredecessorMap().get( select )) {
+	            double childValue;
+	            if (timeMap.containsKey( child ))
+	                childValue = timeMap.get( child );
+	            else
+	               childValue = findLongestTime(child, ind, init, timeMap);  
+                if (childValue > highestTime)
+                    highestTime = childValue;
+	        }
+	        
+	        double serviceTime = 0.0;
+	        if (!select.equals("start") && !select.equals("end"))
+	            serviceTime = init.serviceMap.get(select).getQos()[WSCInitializer.TIME];
+	        double overallTime = highestTime + serviceTime;
+	        timeMap.put( select, overallTime );
+	        return overallTime;
+	    }
+	    else {
+	        return timeMap.get( select );
+	    }
 	}
 
 	private double calculateFitness(double a, double r, double t, double c, WSCInitializer init) {
