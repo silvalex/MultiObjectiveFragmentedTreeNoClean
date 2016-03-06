@@ -7,12 +7,12 @@ import java.util.Set;
 
 import ec.EvolutionState;
 import ec.Individual;
-import ec.gp.GPProblem;
+import ec.Problem;
 import ec.simple.SimpleFitness;
 import ec.simple.SimpleProblemForm;
 import ec.util.Parameter;
 
-public class WSC extends GPProblem implements SimpleProblemForm {
+public class WSC extends Problem implements SimpleProblemForm {
 
 	private static final long serialVersionUID = 1L;
 
@@ -34,10 +34,12 @@ public class WSC extends GPProblem implements SimpleProblemForm {
 	        double time = findLongestTime("end", tree, init, timeMap);
 			
 			for (String key : timeMap.keySet()) {
-			    double[] qos = init.serviceMap.get( key ).getQos();
-			    cost += qos[WSCInitializer.COST];
-			    availability *= qos[WSCInitializer.AVAILABILITY];
-			    reliability *= qos[WSCInitializer.RELIABILITY];
+			    if (!key.equals( "start" ) && !key.equals( "end" )) {
+    			    double[] qos = init.serviceMap.get( key ).getQos();
+    			    cost += qos[WSCInitializer.COST];
+    			    availability *= qos[WSCInitializer.AVAILABILITY];
+    			    reliability *= qos[WSCInitializer.RELIABILITY];
+			    }
 			}
 			
 			double fitness = calculateFitness(availability, reliability, time, cost, init);

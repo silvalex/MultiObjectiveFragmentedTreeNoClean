@@ -59,7 +59,7 @@ public class WSCSpecies extends Species {
 		Set<Service> predecessors = new HashSet<Service>();
 
 		// Get only inputs that are not subsumed by the given composition inputs
-		Set<String> inputsNotSatisfied = init.getInputsNotSubsumed(s.getInputs(), init.startServ.inputs);
+		Set<String> inputsNotSatisfied = init.getInputsNotSubsumed(s.getInputs(), init.startServ.outputs);
 		Set<String> inputsToSatisfy = new HashSet<String>(inputsNotSatisfied);
 
 		if (inputsToSatisfy.size() < s.getInputs().size())

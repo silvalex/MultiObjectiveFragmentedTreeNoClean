@@ -299,6 +299,7 @@ public class WSCInitializer extends SimpleInitializer {
 		}
 
 		if (isSubsumed(outputs, cSearch)) {
+		    endServ.layer = layer;
 			return sSet;
 		}
 		else {
