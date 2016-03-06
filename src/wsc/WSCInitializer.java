@@ -96,7 +96,8 @@ public class WSCInitializer extends SimpleInitializer {
 
 		populateTaxonomyTree();
 		relevant = getRelevantServices(serviceMap, taskInput, taskOutput);
-		calculateNormalisationBounds(relevant);
+		//calculateNormalisationBounds(relevant); XXX
+		calculateNormalisationBounds(new HashSet<Service>(serviceMap.values()));
 		setupTime = System.currentTimeMillis() - startTime;
 	}
 
