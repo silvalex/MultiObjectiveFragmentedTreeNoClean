@@ -31,7 +31,10 @@ public class WSCSpecies extends Species {
 
 	    finishConstructingTree(init.endServ, init, predecessorMap);
 
-	    return new WSCIndividual(predecessorMap);
+	    WSCIndividual newGraph = (WSCIndividual) super.newIndividual(state, thread);
+	    newGraph.setMap(predecessorMap);
+
+	    return newGraph;
 	}
 
 	public void finishConstructingTree(Service s, WSCInitializer init, Map<String, Set<String>> predecessorMap) {
