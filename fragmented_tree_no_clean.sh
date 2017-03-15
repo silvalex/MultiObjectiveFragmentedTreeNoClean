@@ -76,7 +76,7 @@ ls -la
 DIR_HOME="/u/students/sawczualex/"
 DIR_GRID="/vol/grid-solar/sgeusers/sawczualex/"
 DIR_WORKSPACE="workspace/"
-DIR_PROGRAM=$DIR_HOME$DIR_WORKSPACE/"MultiObjectiveFragmentedTree/"
+DIR_PROGRAM=$DIR_HOME$DIR_WORKSPACE/"MultiObjectiveFragmentedTreeNoClean/"
 ECJ_JAR=$DIR_HOME$DIR_WORKSPACE/"Library/ecj.23.jar"
 DIR_OUTPUT=$DIR_GRID$2 # Name of directory containing output
 
@@ -90,7 +90,7 @@ FILE_FRONT_PREFIX="front"
 # Copy the input files to the local directory
 #
 
-cp -r $DIR_PROGRAM"bin" .
+cp -r $DIR_PROGRAM"program.jar" .
 cp $DIR_PROGRAM"nsga2-wsc.params" .
 cp $ECJ_JAR .
 cp $1/* . # Copy datasets
@@ -104,12 +104,11 @@ ls -la
 
 seed=$SGE_TASK_ID
 result=$FILE_RESULT_PREFIX$seed.stat
-analysis=$ANALYSIS_PREFIX$seed.stat
 front=$FILE_FRONT_PREFIX$seed.stat
 
-java -cp ecj.23.jar:./bin:. ec.Evolve -file $3 -p seed.0=$seed -p stat.file=\$$result -p stat.evaluations=\$$analysis -p stat.front=\$$front
+java -cp ecj.23.jar:program.jar ec.Evolve -file $3 -p seed.0=$seed -p stat.file=\$$result -p stat.front=\$$front
 
-echo ==AND NOW, HAVING DONE SOMTHING USEFUL AND CREATED SOME OUTPUT==
+echo ==AND NOW, HAVING DONE SOMETHING USEFUL AND CREATED SOME OUTPUT==
 ls -la
 
 # Now we move the output to a place to pick it up from later
