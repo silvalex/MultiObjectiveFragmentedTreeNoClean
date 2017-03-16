@@ -118,6 +118,9 @@ if [ ! -d $DIR_OUTPUT ]; then
 fi
 cp *.stat $DIR_OUTPUT
 
+# Also copy over the parameter file, so we preserve the settings
+cp nsga2-wsc.params $DIR_OUTPUT
+
 echo "Ran through OK"
 
 
